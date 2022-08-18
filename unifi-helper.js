@@ -1652,6 +1652,60 @@ var Controller = function (hostname, port, unifios, ssl) {
                 // always executed
             });
     };
+
+    /**
+     * Set Outlet Port State
+     * ------------------------------
+     *
+     * required parameter <mac>  = client mac address.
+     * required parameter <port_index> = integer; number of the port, starting with 1
+     * optional parameter <relay_state>          = boolean; enable/disable relay
+     * optional parameter <cycle_enabled>        = boolean; enable/disable cycle
+     */
+    _self.setOutletPortState = function (sites, mac, port_index, relay_state, cycle_state, cb) {
+        try {
+            if (mac && port_index) {
+                _self._request('/api/s/<SITE>/stat/device/', null, sites, function (err, result) {
+                    if (!err && result && result.length > 0) {
+                        result.forEach(device => {
+                            if (device.mac == mac.toLowerCase()) {
+                                var changed = false;
+                                var outlet_overrides = [];
+				console.log(device.outlet_overrides);
+                                device.outlet_overrides.forEach(port => {
+                                    if (port.index == port_index) {
+                                        changed = true;
+				
+					if (typeof (relay_state) !== 'undefined') {
+					    port.relay_state = relay_state;
+					}
+					
+					if (typeof (cycle_state) !== 'undefined') {
+					    port.cycle_state = cycle_state;
+					}
+                                    }
+                                    outlet_overrides.push(port)
+                                });
+                                
+				if (changed) {
+				    var json = { outlet_overrides: outlet_overrides };
+
+                                    _self._request('/api/s/<SITE>/rest/device/' + device._id, json, sites, cb, 'PUT');
+                                }
+                            }
+                        });
+                    }
+                });
+
+            } else {
+                cb({ message: `A mandatory parameter is missing` });
+            }
+
+
+        } catch (e) {
+            cb({ message: e });
+        }
+    };
 };
 
 exports.Controller = Controller;

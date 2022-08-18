@@ -198,7 +198,10 @@ module.exports = function (RED) {
                         break;
                     case 'unsetlocate':
                         controller.setLocateAccessPoint(site, msg.payload.mac, false, handleDataCallback);
-                        break;           
+                        break;          
+		    case 'setoutletportstate':
+			controller.setOutletPortState(site, msg.payload.mac, msg.payload.index, msg.payload.relay_state, msg.payload.cycle_enabled);
+			break;
                     default:
                         controller.logout();
                         node.status({
